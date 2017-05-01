@@ -372,18 +372,24 @@ class AlphaBetaPlayer(IsolationPlayer):
             return self.score(game, original_player)
 
         if maximizing_player:
+            moves_with_scores = dict()
             for move in game.get_legal_moves(game.active_player):
                 alpha = max(alpha, self.alphabeta_recursive(game.forecast_move(move), original_player, current_depth,
                                                             max_depth, False, alpha, beta))
+                moves_with_scores[move] = alpha
+
                 if alpha >= beta:
                     break
 
             return alpha
 
         else:
+            moves_with_scores = dict()
             for move in game.get_legal_moves(game.active_player):
                 beta = min(beta, self.alphabeta_recursive(game.forecast_move(move), original_player, current_depth,
                                                           max_depth, True, alpha, beta))
+                moves_with_scores[move] = beta
+
                 if alpha >= beta:
                     break
 
