@@ -2,7 +2,6 @@
 test your agent's strength against a set of known agents using tournament.py
 and include the results in your report.
 """
-import random
 
 
 class SearchTimeout(Exception):
@@ -112,6 +111,7 @@ class IsolationPlayer:
         positive value large enough to allow the function to return before the
         timer expires.
     """
+
     def __init__(self, search_depth=3, score_fn=custom_score, timeout=10.):
         self.search_depth = search_depth
         self.score = score_fn
@@ -213,7 +213,29 @@ class MinimaxPlayer(IsolationPlayer):
             raise SearchTimeout()
 
         # TODO: finish this function!
-        return game.get_legal_moves(self)
+
+        return self.minimax_recursive(game, game.active_player, 0, depth)
+
+    def minimax_recursive(self, game, original_player, current_depth, max_depth):
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        current_depth += 1
+
+        if current_depth <= max_depth:
+            if len(game.get_legal_moves(game.active_player)) == 0:
+                return self.score(game, original_player)
+        else:
+            return self.score(game, original_player)
+
+        moves_with_scores = dict(
+            [(move, self.minimax_recursive(game.forecast_move(move), original_player, current_depth, max_depth))
+             for move in game.get_legal_moves(game.active_player)])
+
+        if current_depth == 1:
+            return max(moves_with_scores, key=moves_with_scores.get)
+        else:
+            return max(moves_with_scores.values())
 
 
 class AlphaBetaPlayer(IsolationPlayer):
