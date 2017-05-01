@@ -357,5 +357,34 @@ class AlphaBetaPlayer(IsolationPlayer):
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        # TODO: finish this function!
-        raise NotImplementedError
+        return self.alphabeta_recursive(game, game.active_player, 0, depth, True, alpha, beta)
+
+    def alphabeta_recursive(self, game, original_player, current_depth, max_depth, maximizing_player, alpha, beta):
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        current_depth += 1
+
+        if current_depth <= max_depth:
+            if len(game.get_legal_moves(game.active_player)) == 0:
+                return self.score(game, original_player)
+        else:
+            return self.score(game, original_player)
+
+        if maximizing_player:
+            for move in game.get_legal_moves(game.active_player):
+                alpha = max(alpha, self.alphabeta_recursive(game.forecast_move(move), original_player, current_depth,
+                                                            max_depth, False, alpha, beta))
+                if alpha >= beta:
+                    break
+
+            return alpha
+
+        else:
+            for move in game.get_legal_moves(game.active_player):
+                beta = min(beta, self.alphabeta_recursive(game.forecast_move(move), original_player, current_depth,
+                                                          max_depth, True, alpha, beta))
+                if alpha >= beta:
+                    break
+
+            return beta
