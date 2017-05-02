@@ -212,60 +212,75 @@ class MinimaxPlayer(IsolationPlayer):
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        return self.minimax_recursive(game, game.active_player, 0, depth)
+        return self.minimax_recursive(game, game.active_player, 0, depth, True)
 
-    def minimax_recursive(self, game, original_player, current_depth, max_depth):
-        # Check for timeout
+    def minimax_recursive(self, game, original_player, current_depth, max_depth, maximizing_player):
+        # Check time constraint
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
-        # Keep track of depth
+        # Increase current depth
         current_depth += 1
 
-        if current_depth <= max_depth:
-            # If agent didn't exceed maximum depth then it checks if it's currently in the leaf node of game tree
-            if len(game.get_legal_moves(game.active_player)) == 0:
-                return self.score(game, original_player)
-        else:
-            # If agent exceeded maximum depth then it returns immediately node's value
+        # If current recursive node is a leaf node or depth limit is exceeded
+        # then return game score based on supplied score function
+        if len(game.get_legal_moves(game.active_player)) == 0 or current_depth > max_depth:
             return self.score(game, original_player)
 
-        # Each recursive call to minimax contains dictionary of type { move: value } e. g. { (0, 1): 23 }
-        # for every legal move in a given node
-        moves_with_scores = dict(
-            [(move, self.minimax_recursive(game.forecast_move(move), original_player, current_depth, max_depth))
-             for move in game.get_legal_moves(game.active_player)])
+        if maximizing_player:
+            # If current player is a maximizing one
+            # then recursively compute values of children nodes, take maximum and
+            # propagate it up the function calls stack
+            moves_with_scores = dict()
+            for move in game.get_legal_moves(game.active_player):
+                alpha = self.minimax_recursive(game.forecast_move(move), original_player,
+                                               current_depth, max_depth, False)
+                moves_with_scores[move] = alpha
 
-        # If recursive call in moves_with_scores doesn't return a desired value (not terminal game state)
-        # then agent goes deeper in a game tree and when it hits base case it returns max value,
-        # through function calls stack, for each function's moves_with_scores and propagates it upwards
+            # Recognize if it's first function call and return key (move) instead of value
+            if current_depth == 1:
+                return max(moves_with_scores, key=moves_with_scores.get)
+            else:
+                return max(moves_with_scores.values())
 
-        # If agent recognizes current function call as the first one (current_depth == 1) then it returns desired move
-        # based on maximum values propagated previously
-        if current_depth == 1:
-            return max(moves_with_scores, key=moves_with_scores.get)
         else:
-            return max(moves_with_scores.values())
+            # If current player is a minimizing one
+            # then recursively compute values of children nodes, take minimum and
+            # propagate it up the function calls stack
+            moves_with_scores = dict()
+            for move in game.get_legal_moves(game.active_player):
+                beta = self.minimax_recursive(game.forecast_move(move), original_player,
+                                              current_depth, max_depth, True)
+                moves_with_scores[move] = beta
 
-            # Example:
-            #                         A
-            #                      /     \
-            #                    B(10)    C
-            #                           /   \
-            #                         D(10)  E
-            #                              /   \
-            #                           F(20)  G(0)
-            #
-            # minimax(A) -> moves_with_scores = { B: 10, C: minimax(C) }
-            # minimax(C) -> moves_with_scores = { D: 10, E: minimax(E) }
-            # minimax(E) -> moves_with_scores = { F: 20, G: 0 }
-            #
-            # agent propagates upwards maximum value of each moves_with_scores:
-            # minimax(E) -> 20
-            # minimax(C) -> moves_with_scores = { D: 10, E: 20 }
-            # minimax(A) -> moves_with_scores = { B: 10, C: 20 }
-            #
-            # agent recognizes minimax(A) as first function call and returns C which is best move
+            # Recognize if it's first function call and return key (move) instead of value
+            if current_depth == 1:
+                return min(moves_with_scores, key=moves_with_scores.get)
+            else:
+                return min(moves_with_scores.values())
+
+                # Example:
+                # A - maximizing, C - minimizing, E - maximizing
+                # Maximizing and minimizing players are taking turns
+                #
+                #                         A
+                #                      /     \
+                #                    B(10)    C
+                #                           /   \
+                #                         D(5)   E
+                #                              /   \
+                #                           F(20)  G(0)
+                #
+                # minimax(A) -> moves_with_scores = { B: 10, C: minimax(C) }
+                # minimax(C) -> moves_with_scores = { D: 5, E: minimax(E) }
+                # minimax(E) -> moves_with_scores = { F: 20, G: 0 }
+                #
+                # Agent propagates upwards maximum or minimum value of each moves_with_scores:
+                # minimax(E) -> 20
+                # minimax(C) -> moves_with_scores = { D: 5, E: 20 }
+                # minimax(A) -> moves_with_scores = { B: 10, D: 5 }
+                #
+                # Agent recognizes minimax(A) as first function call and returns B which is best move
 
 
 class AlphaBetaPlayer(IsolationPlayer):
@@ -374,29 +389,23 @@ class AlphaBetaPlayer(IsolationPlayer):
         if maximizing_player:
             moves_with_scores = dict()
             for move in game.get_legal_moves(game.active_player):
-                alpha = max(alpha, self.alphabeta_recursive(game.forecast_move(move), original_player, current_depth,
-                                                            max_depth, False, alpha, beta))
+                alpha = self.alphabeta_recursive(game.forecast_move(move), original_player, current_depth,
+                                                 max_depth, False, alpha, beta)
                 moves_with_scores[move] = alpha
-
-                if alpha >= beta:
-                    break
 
             if current_depth == 1:
                 return max(moves_with_scores, key=moves_with_scores.get)
             else:
-                return alpha
+                return max(moves_with_scores.values())
 
         else:
             moves_with_scores = dict()
             for move in game.get_legal_moves(game.active_player):
-                beta = min(beta, self.alphabeta_recursive(game.forecast_move(move), original_player, current_depth,
-                                                          max_depth, True, alpha, beta))
+                beta = self.alphabeta_recursive(game.forecast_move(move), original_player, current_depth,
+                                                max_depth, True, alpha, beta)
                 moves_with_scores[move] = beta
-
-                if alpha >= beta:
-                    break
 
             if current_depth == 1:
                 return min(moves_with_scores, key=moves_with_scores.get)
             else:
-                return beta
+                return min(moves_with_scores.values())
