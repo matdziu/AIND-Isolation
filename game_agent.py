@@ -381,7 +381,10 @@ class AlphaBetaPlayer(IsolationPlayer):
                 if alpha >= beta:
                     break
 
-            return alpha
+            if current_depth == 1:
+                return max(moves_with_scores, key=moves_with_scores.get)
+            else:
+                return alpha
 
         else:
             moves_with_scores = dict()
@@ -393,4 +396,7 @@ class AlphaBetaPlayer(IsolationPlayer):
                 if alpha >= beta:
                     break
 
-            return beta
+            if current_depth == 1:
+                return min(moves_with_scores, key=moves_with_scores.get)
+            else:
+                return beta
