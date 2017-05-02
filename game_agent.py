@@ -33,8 +33,8 @@ def custom_score(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    # Naive evaluation function
+    return float(len(game.get_legal_moves(player)))
 
 
 def custom_score_2(game, player):
@@ -59,8 +59,8 @@ def custom_score_2(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    # Slightly better evaluation function
+    return float(len(game.get_legal_moves(player)) - len(game.get_legal_moves(game.get_opponent(player))))
 
 
 def custom_score_3(game, player):
@@ -85,8 +85,8 @@ def custom_score_3(game, player):
     float
         The heuristic value of the current game state to the specified player.
     """
-    # TODO: finish this function!
-    raise NotImplementedError
+    # Aggressive evaluation function
+    return float(len(game.get_legal_moves(player)) - 2 * len(game.get_legal_moves(game.get_opponent(player))))
 
 
 class IsolationPlayer:
@@ -442,7 +442,9 @@ class AlphaBetaPlayer(IsolationPlayer):
 
                 # Alphabeta summary:
                 # For alphabeta we want our game tree to know about parameters alpha and beta
-                # in its whole breadth and depth. Alpha and beta are currently met max and min value.
+                # in its whole breadth and depth.
+                # Alpha is current max value met by maximizing player.
+                # Beta is current min value met by minimizing player.
                 # Breadth knowledge is achieved through saving parameter outside of each loop iteration.
                 # Depth knowledge is achieved through passing alpha and beta recursively.
                 # Finally we simply prune search (break the loop) every time alpha >= beta
