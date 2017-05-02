@@ -375,36 +375,60 @@ class AlphaBetaPlayer(IsolationPlayer):
         return self.alphabeta_recursive(game, game.active_player, 0, depth, True, alpha, beta)
 
     def alphabeta_recursive(self, game, original_player, current_depth, max_depth, maximizing_player, alpha, beta):
+        # Check time constraint
         if self.time_left() < self.TIMER_THRESHOLD:
             raise SearchTimeout()
 
+        # Increase current depth
         current_depth += 1
 
-        if current_depth <= max_depth:
-            if len(game.get_legal_moves(game.active_player)) == 0:
-                return self.score(game, original_player)
-        else:
+        # If current recursive node is a leaf node or depth limit is exceeded
+        # then return game score based on supplied score function
+        if len(game.get_legal_moves(game.active_player)) == 0 or current_depth > max_depth:
             return self.score(game, original_player)
 
+        # Pruning: whenever alpha is greater than or equal to beta then break the loop
         if maximizing_player:
+            # If current player is a maximizing one
+            # then recursively compute values of children nodes, take maximum and
+            # propagate it up the function calls stack
             moves_with_scores = dict()
             for move in game.get_legal_moves(game.active_player):
-                alpha = self.alphabeta_recursive(game.forecast_move(move), original_player, current_depth,
-                                                 max_depth, False, alpha, beta)
+                # Agent is only interested in values that are greater than it's current maximum value
+                # because the goal is maximization
+                alpha = max(alpha, self.alphabeta_recursive(game.forecast_move(move), original_player,
+                                                            current_depth, max_depth, False, alpha, beta))
+
                 moves_with_scores[move] = alpha
 
+                # Pruning
+                if alpha >= beta:
+                    break
+
+            # Recognize if it's first function call and return key (move) instead of value
             if current_depth == 1:
                 return max(moves_with_scores, key=moves_with_scores.get)
             else:
                 return max(moves_with_scores.values())
 
         else:
+            # If current player is a minimizing one
+            # then recursively compute values of children nodes, take minimum and
+            # propagate it up the function calls stack
             moves_with_scores = dict()
             for move in game.get_legal_moves(game.active_player):
-                beta = self.alphabeta_recursive(game.forecast_move(move), original_player, current_depth,
-                                                max_depth, True, alpha, beta)
+                # Agent is only interested in values that are less than it's current minimum value
+                # because the goal is minimization
+                beta = min(beta, self.alphabeta_recursive(game.forecast_move(move), original_player,
+                                                          current_depth, max_depth, True, alpha, beta))
+
                 moves_with_scores[move] = beta
 
+                # Pruning
+                if alpha >= beta:
+                    break
+
+            # Recognize if it's first function call and return key (move) instead of value
             if current_depth == 1:
                 return min(moves_with_scores, key=moves_with_scores.get)
             else:
