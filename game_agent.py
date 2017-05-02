@@ -439,3 +439,10 @@ class AlphaBetaPlayer(IsolationPlayer):
                 return min(moves_with_scores, key=moves_with_scores.get)
             else:
                 return min(moves_with_scores.values())
+
+                # Alphabeta summary:
+                # For alphabeta we want our game tree to know about parameters alpha and beta
+                # in its whole breadth and depth. Alpha and beta are currently met max and min value.
+                # Breadth knowledge is achieved through saving parameter outside of each loop iteration.
+                # Depth knowledge is achieved through passing alpha and beta recursively.
+                # Finally we simply prune search (break the loop) every time alpha >= beta
